@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar.gz
+docker-compose.override.yml
+
+# Secrets
+.env
+*.pem
+*.key
+*.crt
+
+# IDEs
+.vscode/
+.idea/
+
+# Node (if ever added)
+node_modules/

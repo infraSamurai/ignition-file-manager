@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-manager
+  namespace: file-manager
+  labels:
+    app: file-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: file-manager
+  template:
+    metadata:
+      labels:
+        app: file-manager
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: file-manager
+        image: file-manager/file-manager:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: file-manager-auth
+              key: admin-user
+        - name: ADMIN_PASS
+          valueFrom:
+            secretKeyRef:
+              name: file-manager-auth
+              key: admin-pass
+        volumeMounts:
+        - name: file-storage
+          mountPath: /mnt/file
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: file-storage
+        persistentVolumeClaim:
+          claimName: file-manager-storage

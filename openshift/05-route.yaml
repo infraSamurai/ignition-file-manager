@@ -1,0 +1,17 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: file-manager
+  namespace: file-manager
+  labels:
+    app: file-manager
+spec:
+  to:
+    kind: Service
+    name: file-manager
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

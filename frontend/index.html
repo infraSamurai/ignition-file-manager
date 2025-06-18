@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager - OpenShift</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Local Font Awesome -->
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-folder-tree"></i> File Manager</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="btn btn-primary" id="upload-btn">
+                    <i class="fas fa-upload"></i> Upload Files
+                </button>
+                <input type="file" id="file-upload" multiple hidden />
+                
+                <button class="btn btn-secondary" id="create-folder-btn">
+                    <i class="fas fa-folder-plus"></i> New Folder
+                </button>
+                
+                <button class="btn btn-danger" id="delete-selected-btn" disabled>
+                    <i class="fas fa-trash"></i> Delete Selected
+                </button>
+                
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search files...">
+                    <i class="fas fa-search"></i>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="btn btn-logout" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Header -->
+            <header class="header">
+                <div class="breadcrumb" id="breadcrumb">
+                    <i class="fas fa-home"></i>
+                    <span>/</span>
+                </div>
+                <div id="current-full-path" class="path-display"></div>
+                
+                <div class="view-controls">
+                    <button class="view-btn active" data-view="grid" title="Grid View">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="view-btn" data-view="list" title="List View">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- File Grid/List -->
+            <div class="file-container" id="file-container">
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading...</span>
+                </div>
+                
+                <div class="file-grid" id="file-grid" 
+                     ondrop="handleDrop(event)" 
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)">
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <ul>
+            <li id="ctx-open"><i class="fas fa-folder-open"></i> Open</li>
+            <li id="ctx-download"><i class="fas fa-download"></i> Download</li>
+            <li id="ctx-rename"><i class="fas fa-edit"></i> Rename</li>
+            <li id="ctx-delete"><i class="fas fa-trash"></i> Delete</li>
+        </ul>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal" id="rename-modal">
+        <div class="modal-content">
+            <h3>Rename</h3>
+            <input type="text" id="rename-input" placeholder="Enter new name">
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="rename-confirm">Rename</button>
+                <button class="btn btn-secondary" id="rename-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: file-manager-storage
+  namespace: file-manager
+spec:
+  accessModes:
+    - ReadWriteMany  # RWX for multiple pods
+  resources:
+    requests:
+      storage: 50Gi
+  
+  storageClassName: "nutanix.sc"
