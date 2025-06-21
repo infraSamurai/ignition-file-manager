@@ -95,6 +95,10 @@ function initializeEventListeners() {
         if (contextMenuItem) downloadItem(contextMenuItem);
     });
     
+    document.getElementById('ctx-get-url').addEventListener('click', () => {
+        if (contextMenuItem) copyFileUrl(contextMenuItem);
+    });
+    
     document.getElementById('ctx-rename').addEventListener('click', () => {
         if (contextMenuItem) showRenameModal(contextMenuItem);
     });
@@ -107,6 +111,9 @@ function initializeEventListeners() {
     document.getElementById('rename-cancel').addEventListener('click', hideRenameModal);
     document.getElementById('rename-confirm').addEventListener('click', confirmRename);
     
+    // URL copy button
+    document.getElementById('copy-url-btn').addEventListener('click', copyCurrentUrl);
+    
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboard);
 }
@@ -115,6 +122,10 @@ async function loadFiles(path) {
     showLoading(true);
     selectedFiles.clear();
     updateDeleteButton();
+    
+    // Clear URL display
+    document.getElementById('url-input').value = '';
+    document.getElementById('url-input').placeholder = 'Select a file to see its URL';
     
     try {
         const response = await fetch(`/list?path=${encodeURIComponent(path)}`);
@@ -173,7 +184,7 @@ function createFileItem(file) {
     div.dataset.type = file.type;
     div.dataset.name = file.name;
 
-    const icon = getFileIcon(file);
+    const icon = file.isParent ? 'fa-arrow-circle-up' : getFileIcon(file);
     const displayName = file.isParent ? 'Parent Directory' : file.name;
     const checkboxHtml = '<input type="checkbox" class="file-select-checkbox" />';
 
@@ -255,6 +266,7 @@ function handleFileClick(e, file) {
     }
 
     updateDeleteButton();
+    updateUrlDisplay(file);
 }
 
 function openItem(file) {
@@ -433,11 +445,26 @@ async function handleSearch(query) {
 async function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
         try {
-            await fetch('/logout', { method: 'POST' });
-            window.location.href = '/login';
+            // For basic auth, we need to send invalid credentials to force re-authentication
+            const response = await fetch('/logout', { 
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('logout:logout')
+                }
+            });
+            
+            // Force browser to forget credentials
+            if (response.status === 401) {
+                // Clear any stored data
+                selectedFiles.clear();
+                currentPath = '';
+                
+                // Redirect to force re-authentication
+                window.location.href = '/';
+            }
         } catch (error) {
-            // Redirect to login page on error too
-            window.location.href = '/login';
+            // Force reload on error too
+            window.location.reload();
         }
     }
 }
@@ -470,6 +497,14 @@ function showContextMenu(e, file) {
     
     const menu = document.getElementById('context-menu');
     contextMenuItem = e.currentTarget;
+    
+    // Show/hide Get URL option based on file type
+    const getUrlOption = document.getElementById('ctx-get-url');
+    if (file.type === 'file' && !file.isParent) {
+        getUrlOption.style.display = '';
+    } else {
+        getUrlOption.style.display = 'none';
+    }
     
     // Position menu
     const x = e.pageX;
@@ -522,9 +557,14 @@ function handleKeyboard(e) {
     if (e.key === 'Escape') {
         document.querySelectorAll('.file-item').forEach(item => {
             item.classList.remove('selected');
+            const cb = item.querySelector('.file-select-checkbox');
+            if (cb) cb.checked = false;
         });
         selectedFiles.clear();
         updateDeleteButton();
+        // Clear URL display
+        document.getElementById('url-input').value = '';
+        document.getElementById('url-input').placeholder = 'Select a file to see its URL';
     }
 }
 
@@ -601,31 +641,71 @@ function showToast(message, duration = 3000) {
     }, 10);
 }
 
-// Update only the handleLogout function in your existing script.js:
-
-async function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        try {
-            // For basic auth, we need to send invalid credentials to force re-authentication
-            const response = await fetch('/logout', { 
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Basic ' + btoa('logout:logout')
-                }
-            });
-            
-            // Force browser to forget credentials
-            if (response.status === 401) {
-                // Clear any stored data
-                selectedFiles.clear();
-                currentPath = '';
-                
-                // Redirect to force re-authentication
-                window.location.href = '/';
-            }
-        } catch (error) {
-            // Force reload on error too
-            window.location.reload();
-        }
+// URL Display functions
+function updateUrlDisplay(file) {
+    const urlInput = document.getElementById('url-input');
+    if (file.type === 'file' && !file.isParent) {
+        const url = `${window.location.origin}/files/${file.path}`;
+        urlInput.value = url;
+    } else {
+        urlInput.value = '';
+        urlInput.placeholder = 'Select a file to see its URL';
     }
+}
+
+function copyCurrentUrl() {
+    const urlInput = document.getElementById('url-input');
+    const copyBtn = document.getElementById('copy-url-btn');
+    
+    if (urlInput.value) {
+        copyToClipboard(urlInput.value, 'URL copied to clipboard!');
+        
+        // Visual feedback
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+            copyBtn.classList.remove('copied');
+        }, 2000);
+    }
+}
+
+function copyFileUrl(fileElement) {
+    const path = fileElement.dataset.path;
+    const type = fileElement.dataset.type;
+    
+    if (type === 'file') {
+        const url = `${window.location.origin}/files/${path}`;
+        copyToClipboard(url, 'File URL copied to clipboard!');
+    } else {
+        showToast('Cannot get URL for folders');
+    }
+}
+
+function copyToClipboard(text, successMessage) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast(successMessage || 'Copied to clipboard!');
+        }).catch(() => {
+            fallbackCopyToClipboard(text, successMessage);
+        });
+    } else {
+        fallbackCopyToClipboard(text, successMessage);
+    }
+}
+
+function fallbackCopyToClipboard(text, successMessage) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        showToast(successMessage || 'Copied to clipboard!');
+    } catch (err) {
+        showToast('Failed to copy to clipboard');
+    }
+    
+    document.body.removeChild(textarea);
 }

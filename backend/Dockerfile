@@ -2,13 +2,14 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install Flask
-RUN pip install flask
+# Install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-# Copy application code
+# Copy app code
 COPY app.py .
 
-# Create a non-root user for OpenShift compatibility
+# Create OpenShift-compatible user
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 USER appuser
 

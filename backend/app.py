@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, jsonify, abort, Response
+from flask import Flask, request, send_file, jsonify, abort, Response, redirect, url_for
 import os
 import shutil
 import zipfile
@@ -276,15 +276,25 @@ def search():
         logging.error(f"Search failed: {str(e)}", exc_info=True)
         return jsonify({'error': 'Search failed', 'details': str(e)}), 500
 
-# Updated logout route for basic auth
+# Updated logout route for redirect to login page
 @app.route('/logout', methods=['POST'])
 def logout():
-    # Return 401 to trigger browser auth dialog
-    return Response(
-        'Logged out. Please login again.',
-        401,
-        {'WWW-Authenticate': 'Basic realm="File Manager - Login Required"'}
-    )
+    return redirect('/login')
+
+@app.route('/get-url')
+def get_url():
+    path = request.args.get('path', '')
+    abs_path = get_abs_path(path)
+
+    if not os.path.exists(abs_path):
+        return jsonify({'error': 'Path not found'}), 404
+
+    if os.path.isdir(abs_path):
+        return jsonify({'error': 'Path is a directory'}), 400
+
+    base_url = request.host_url.rstrip('/')
+    url = f"{base_url}/files/{path.strip('/')}"
+    return jsonify({'url': url})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Manager - OpenShift</title>
+    <title>Ignition File Manager</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Local Font Awesome -->
     <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
@@ -13,7 +13,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-folder-tree"></i> File Manager</h2>
+                <h2><i class="fas fa-fire"></i> Ignition File Manager</h2>
             </div>
             
             <nav class="sidebar-nav">
@@ -76,6 +76,15 @@
                      ondragleave="handleDragLeave(event)">
                 </div>
             </div>
+            
+            <!-- URL Display -->
+            <div class="url-display" id="url-display">
+                <div class="url-label">File URL:</div>
+                <input type="text" id="url-input" readonly placeholder="Select a file to see its URL">
+                <button class="btn-copy" id="copy-url-btn" title="Copy URL to clipboard">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
         </main>
     </div>
     
@@ -84,6 +93,7 @@
         <ul>
             <li id="ctx-open"><i class="fas fa-folder-open"></i> Open</li>
             <li id="ctx-download"><i class="fas fa-download"></i> Download</li>
+            <li id="ctx-get-url"><i class="fas fa-link"></i> Get URL</li>
             <li id="ctx-rename"><i class="fas fa-edit"></i> Rename</li>
             <li id="ctx-delete"><i class="fas fa-trash"></i> Delete</li>
         </ul>
